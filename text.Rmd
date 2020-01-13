@@ -1,0 +1,241 @@
+---
+title: "plan"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+```
+
+### Introduction
+
+#### Recommender systems - what is 
+
+One of the areas, in which algorithmic research has created the biggest value added is recommender systems. In an information era, amount of content avaliable for each person is impossible to consume in a lifetime. For any site or service providing content (...), there is a need to help user in finding the content he is searching for or is appropriate for him. Depending on the service type, it can help increase sales (as on e-commerce sites), make the user spend more time on the website (like on social media), or simply provide most valuable content for the user thus increasing his satisfaction (Netflix, Spotify etc.). 
+
+#### Popularity
+
+Usage of recommender systems can occur practically in every service, in which there is a need to provide the user some specific type of content appropriate for him. It is extensively used in e-commerce (e-bay, allgro), streaming services (Netflix, Spotify), social networking sites (Facebook, Instagram),
+
+Interesting thig about this area of research is Netflix Prize. In 2006, this company has offered 1 million dollars for coming up with a movie recommendation engine significantly better than the on used before. The best solution was an ensemble of 107 techniques blended into one prediction.
+
+### Data
+
+In this paper I have tried to implement a movie recommendation engine. The MovieLens dataset is a widely popular in RS development. A standard version contains information about 20 million user ratings. In this study, to reduce analysis time, I have used a smaller subset of this dataset, containing 100 000 ratings made by 600 users for 9 000 movies.
+
+
+
+The part of the dataset I have used in this study is contained in two csv files. Main table is `ratings`, which contains information about user, movie id, rating and timestamp of rating. Timestamp is converted to human-readable value. I have also joined movie title to rating information 
+
+```{r lib-load}
+library(recommenderlab)
+library(tidyverse)
+library(readr)
+library(arules)
+library(arulesViz)
+```
+
+
+
+```{r data-load, cache=T}
+
+#' userId | movieId | rating | timestamp
+ratings <- read_csv("data/ratings.csv")
+
+#' movieId | title | genres (pipe separated)
+movies <- read_csv("data/movies.csv")
+
+
+ratings %>%
+  rename(user_id = userId,
+         movie_id = movieId) %>%
+  mutate(timestamp = as.POSIXct(timestamp,
+                                origin = "1970-01-01")) -> ratings
+
+movies %>%
+  rename(movie_id = movieId) -> movies
+
+ratings %>% 
+  left_join(movies) %>%
+  select(-genres, -movie_id) %>%
+  rename(movie_id = title) -> ratings
+
+```
+
+
+### Methods
+
+#### Collaborative filtering
+
+Collaborative filtering is a family of recommender system algorithms. It is based on the fact that similar users can be found. If two users have agreed in the past, there is a big chance that they will agree in the future. This approach is in opposite to  content-based filtering, in which next items are recommended based on the content (e.g. movie plot or some audio characteristics of songs).
+
+Superiority of collaborative filtering over content-based lies mostly in the fact, that analyzing content of an item requires really complex methods, if it is feasible at all. For example, it is possible to analyze image data only to some extent, and comprehension of images by humans is still superior to any algorithm. (???)
+
+There are two main types of CF - item-based and user-based. First one is based on finding similar items (based on previous ratings). After that, user is recommended items which are similar to the one chosen before. 
+User-based collaborative filering is based on finding similar users. If the history of choices are similar, there is a big chance that next purchases will be also similar.
+
+#### Association rules learning
+
+Association rules learning is one of the ways to tackle the recommender problem. ...
+
+#### Experimental setting
+
+To compare UBCF and apriori algorithms, I have created a following experimental setting. I have divided the dataset into train and test split. As the timestamp is present in the data, I have decided to employ approach similar to the one used in time-series cross-validation. The test dataset contains last 30 ratings made by each user. 
+I have filtered out the users with less ratings made. This is also to eliminate noise in the dataset. 
+
+Altohugh collaborative filering can use numeric rating to improve predictions, for comparison with apriori algorithm I have decided to leave out that information. 
+
+After this procedure I have trained User-Based Collaborative Filtering and Apriori models. For the latter one, I have used confidence value of ... and support ... .
+To assess the prediction accuracy, I have compared set of 100 recommended movies with actual movies each user he has rated. I have computed a total number of movies on intersection of these two sets. 
+
+### Analysis
+
+There are various R packages for creating recommender systems. `arules` provides a set of association rules mining functions. As for RS, there is a package called `recommenderlab`. It serves as a wrapper over methods defined in `arules` and other packages. The main strength lies in its versatility and unified interface for various metods - it is possible to run complex validation of different approaches and algorithms in the same way. However, its peculiar syntax and usage of S4 object system make it unpleasant to use and incompatible with other packages. 
+
+
+First step is to filter out non-active users. I have also made a training-test split based on timestamp obtained for each user. 
+
+```{r, cache=T}
+
+# Filter out users with less than 30 ratings
+ratings %>%
+  group_by(user_id) %>%
+  summarise(cnt_votes = n()) %>%
+  filter(cnt_votes > 30) %>%
+  .$user_id -> big_users
+
+ratings_filtered <- ratings %>%
+  filter(user_id %in% big_users)
+
+# Do a Train-test split  
+no_obs_to_test <- 30
+
+ratings_filtered <- ratings_filtered %>% 
+  mutate(id = row_number())
+
+ratings_filtered %>%
+  arrange(user_id, timestamp) %>%
+  group_by(user_id) %>%
+  mutate(time = row_number(), # convert timestamp to ranking
+         inv_time = max(time) - time + 1) %>%
+  ungroup() -> ratings_ordered
+
+# inv_time = 1 - most recent
+# time = 1 - oldest
+
+ratings_ordered %>%
+  filter(inv_time > no_obs_to_test) -> training_set
+
+ratings_ordered %>%
+  filter(inv_time <= no_obs_to_test) -> test_set
+```
+
+
+Training set contains `r nrow(training_set)` observations, while test set - `r nrow(test_set)`.
+
+Below I have created two recommender models using `recommenderlab`. The function requires to convert the dataset to a `binaryRatingMatrix` format previously.
+
+```{r train-models, cache=T}
+training_set %>%
+  select(user_id, movie_id) %>%
+  mutate(rating = 1) %>%
+  as.data.frame() -> training_ratings_matrix
+
+training_affinity_matrix <- as(training_ratings_matrix, 
+                               "binaryRatingMatrix")
+
+ubcf_model <-
+  recommenderlab::Recommender(training_affinity_matrix,
+                              method = "UBCF")
+
+apriori_model <-
+  recommenderlab::Recommender(training_affinity_matrix,
+                              method = "AR",
+                              parameter = list(supp = 0.1, conf = 0.5))
+```
+
+After obtaining models, the packages provides an interface using function `predict`. Below I have predicted 100 next films to watch by each user. One thing wort mentioning is that apriori algorithm is not always capable of producing that amount of ratings  
+
+```{r predict, cache=T}
+ubcf_predictions_raw <- predict(ubcf_model, training_affinity_matrix, n = 100, type = "topN")
+ubcf_predictions_raw <- as(ubcf_predictions_raw, "list")
+
+apriori_predictions_raw <- predict(apriori_model, training_affinity_matrix, n = 100, type = "topN")
+apriori_predictions_raw <- as(apriori_predictions_raw, "list")
+
+```
+
+Output of above code chunk is a list containing information about recommended movies for each user. For user 1, first few entries look like this:
+
+```{r}
+ubcf_predictions_raw[[1]][1:10]
+```
+
+
+To compare recommended movies and actually seen ones, some amout of data wrangling is needed. Below I have computed actual statistics concerning both sets.
+
+```{r, cache=T}
+# Function to compute accuracy measures needed
+accuracy_measures <- function(predicted, actual){
+  tibble(
+    in_both = sum(predicted %in% actual),
+    only_in_predicted = length(predicted) - in_both,
+    only_in_actual = length(actual) - in_both,
+    predicted_cnt = length(predicted), 
+    actual_cnt = length(actual) 
+  )
+}
+
+# Reduce test set to a list with set of movies for each user
+test_set %>%
+  select(user_id, movie_id) %>%
+  group_by(user_id) %>%
+  nest() %>%
+  .$data %>%
+  as.list() %>%
+  map(function(x) as.character(x$movie_id))-> set
+
+# Apriori
+map2(apriori_predictions_raw, 
+     set, 
+     function(x,y) list(predicted = x, actual = y)) -> comparison
+
+comparison %>%
+  map_df(function(x) accuracy_measures(x$predicted, 
+                                       x$actual)) %>%
+  mutate(user_id = row_number()) -> apriori_measures_raw
+
+# UBCF
+map2(ubcf_predictions_raw, 
+     set, 
+     function(x,y) list(predicted = x, actual = y)) -> comparison
+
+
+comparison %>%
+  map_df(function(x) accuracy_measures(x$predicted, 
+                                       x$actual)) %>%
+  mutate(user_id = row_number()) -> ubcf_measures_raw
+
+```
+
+
+This is how measures table looks like:
+```{r, cache = T}
+apriori_measures_raw %>%
+  select(user_id, everything()) %>%
+  head(5) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling()
+```
+
+
+
+
+### Summary
+
+
+
+
+
+
+

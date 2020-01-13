@@ -50,7 +50,7 @@ ggplot(top_movies, aes(cnt_votes)) +
 ratings %>%
   group_by(user_id) %>%
   summarise(cnt_votes = n()) %>%
-  arrange(-cnt_votes) %>%
+  arrange(-cnt_votes) %>% summary()
   ggplot(aes(cnt_votes)) +
   geom_histogram()
 

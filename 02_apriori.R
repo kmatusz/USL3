@@ -46,4 +46,24 @@ a <- rules.by.conf[1:10]
 
 
 
+# Recommenderlab for ubcf ----
+library(recommenderlab)
+ratings %>% select(-timestamp) %>% as.data.frame() -> ratings_matrix
+affinity.matrix<- as(ratings_matrix,"realRatingMatrix")
 
+a <- recommenderlab::Recommender(affinity.matrix[1:100], method = "UBCF")
+
+as(predict(a, affinity.matrix[101:103,], n=5), "list")
+
+
+# Recommenderlab for apriori ----
+library(recommenderlab)
+ratings %>% select(-timestamp) %>% as.data.frame() -> ratings_matrix
+affinity.matrix<- as(ratings_matrix,"realRatingMatrix")
+
+a <- recommenderlab::Recommender(affinity.matrix[1:100], method = "UBCF")
+
+as(predict(a, affinity.matrix[101:103,], n=5), "list")
+
+
+recommenderRegistry$get_entries(dataType = "binaryRatingMatrix")
