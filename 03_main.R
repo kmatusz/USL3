@@ -131,7 +131,7 @@ test_set %>%
 
 
 
-map2(apriori_predictions_raw, set, function(x,y) 
+map2(ubcf_predictions_raw, set, function(x,y) 
   list(predicted = x, actual = y)) -> comparison
 
 accuracy_measures <- function(predicted, actual){

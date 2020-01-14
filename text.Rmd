@@ -1,6 +1,11 @@
 ---
-title: "plan"
-output: html_document
+title: "Usage of Association Rules mining in Recommender Systems"
+output:
+  html_document:
+    # code_folding: hide
+    toc: true
+    toc_float: true
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -9,21 +14,35 @@ knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
 
 ### Introduction
 
-#### Recommender systems - what is 
+One of the areas in which algorithmic research has created the biggest value added is **recommender systems** (RS). In an information era, amount of content available for each person is impossible to consume in a lifetime. For a site or service providing any content, there is a need to help user in finding the content he is searching for or is appropriate for him. Depending on the service type, it can help increase sales (as on e-commerce sites), make the user spend more time on the website (like in social media), or simply provide most valuable content for the user thus increasing his satisfaction (Netflix, Spotify etc.).
 
-One of the areas, in which algorithmic research has created the biggest value added is recommender systems. In an information era, amount of content avaliable for each person is impossible to consume in a lifetime. For any site or service providing content (...), there is a need to help user in finding the content he is searching for or is appropriate for him. Depending on the service type, it can help increase sales (as on e-commerce sites), make the user spend more time on the website (like on social media), or simply provide most valuable content for the user thus increasing his satisfaction (Netflix, Spotify etc.). 
+Usage of recommender systems can occur practically in every service, in which there is a need to provide the user some specific type of content appropriate for him. It is extensively used in e-commerce (E-bay, Allegro), streaming services (Netflix, Spotify), social networking sites (Facebook, Instagram),
 
-#### Popularity
+A breakthrough for this area of research was Netflix Prize. In 2006, this company has offered 1 million dollars for coming up with a movie recommendation engine significantly better than the on used before. This reward has motivated researchers to coming up with novel methods, some of which are being used to this day. The best solution was an ensemble of 107 techniques blended into one prediction.
 
-Usage of recommender systems can occur practically in every service, in which there is a need to provide the user some specific type of content appropriate for him. It is extensively used in e-commerce (e-bay, allgro), streaming services (Netflix, Spotify), social networking sites (Facebook, Instagram),
+### Methods
 
-Interesting thig about this area of research is Netflix Prize. In 2006, this company has offered 1 million dollars for coming up with a movie recommendation engine significantly better than the on used before. The best solution was an ensemble of 107 techniques blended into one prediction.
+The family of recommender algorithms is wide. Main approaches include Collaborative Filtering, Content-Based Filtering, Association Rules mining and various hybrid methods obtained by ensembling couple of methods together. Last approach is aimed at reducing some disadvantages of stand-alone methods. For example, common situation occuring in real-life data is cold start problem, when there are no previous ratings of an item. 
+
+In this paper I have concentrated on two approaches, namely Collaborative Filtering and association rules mining.
+
+#### Collaborative filtering
+
+Collaborative filtering is a family of recommender system algorithms. It is based on obtaining similarities of entities based on previous rating/transactions data. If two users have agreed in the past, there is a big chance that they will agree in the future. This approach is in opposite to  content-based filtering, in which next items are recommended based on the content (e.g. movie plot or some audio characteristics of songs). 
+
+Superiority of collaborative filtering over content-based lies mostly in the fact that analyzing content of an item requires really complex methods, if it is feasible at all. For example, it is possible to analyze image data only to some extent, and comprehension of images by humans is still superior to any algorithm.
+
+There are two main types of CF - item-based and user-based. First one is based on finding similar items (based on previous ratings). After that, user is recommended items which are similar to the one chosen before. 
+User-based collaborative filtering is based on finding similar users. If the history of choices are similar, there is a big chance that next purchases will be also similar.
+
+#### Association rules learning
+
+Association rules learning is one of the ways to tackle the recommender problem. ...
+
 
 ### Data
 
-In this paper I have tried to implement a movie recommendation engine. The MovieLens dataset is a widely popular in RS development. A standard version contains information about 20 million user ratings. In this study, to reduce analysis time, I have used a smaller subset of this dataset, containing 100 000 ratings made by 600 users for 9 000 movies.
-
-
+In this paper I have tried to implement a movie recommendation engine. The MovieLens dataset is widely popular in RS development. A standard version contains information about 20 million user ratings. In this study, to reduce analysis time, I have used a smaller subset of this dataset, containing 100 000 ratings made by 600 users for 9 000 movies.
 
 The part of the dataset I have used in this study is contained in two csv files. Main table is `ratings`, which contains information about user, movie id, rating and timestamp of rating. Timestamp is converted to human-readable value. I have also joined movie title to rating information 
 
@@ -63,34 +82,18 @@ ratings %>%
 ```
 
 
-### Methods
-
-#### Collaborative filtering
-
-Collaborative filtering is a family of recommender system algorithms. It is based on the fact that similar users can be found. If two users have agreed in the past, there is a big chance that they will agree in the future. This approach is in opposite to  content-based filtering, in which next items are recommended based on the content (e.g. movie plot or some audio characteristics of songs).
-
-Superiority of collaborative filtering over content-based lies mostly in the fact, that analyzing content of an item requires really complex methods, if it is feasible at all. For example, it is possible to analyze image data only to some extent, and comprehension of images by humans is still superior to any algorithm. (???)
-
-There are two main types of CF - item-based and user-based. First one is based on finding similar items (based on previous ratings). After that, user is recommended items which are similar to the one chosen before. 
-User-based collaborative filering is based on finding similar users. If the history of choices are similar, there is a big chance that next purchases will be also similar.
-
-#### Association rules learning
-
-Association rules learning is one of the ways to tackle the recommender problem. ...
-
-#### Experimental setting
+### Analysis
 
 To compare UBCF and apriori algorithms, I have created a following experimental setting. I have divided the dataset into train and test split. As the timestamp is present in the data, I have decided to employ approach similar to the one used in time-series cross-validation. The test dataset contains last 30 ratings made by each user. 
 I have filtered out the users with less ratings made. This is also to eliminate noise in the dataset. 
 
-Altohugh collaborative filering can use numeric rating to improve predictions, for comparison with apriori algorithm I have decided to leave out that information. 
+Although collaborative filtering can use numeric rating to improve predictions, for comparison with apriori algorithm I have decided to leave out that information. 
 
 After this procedure I have trained User-Based Collaborative Filtering and Apriori models. For the latter one, I have used confidence value of ... and support ... .
 To assess the prediction accuracy, I have compared set of 100 recommended movies with actual movies each user he has rated. I have computed a total number of movies on intersection of these two sets. 
 
-### Analysis
 
-There are various R packages for creating recommender systems. `arules` provides a set of association rules mining functions. As for RS, there is a package called `recommenderlab`. It serves as a wrapper over methods defined in `arules` and other packages. The main strength lies in its versatility and unified interface for various metods - it is possible to run complex validation of different approaches and algorithms in the same way. However, its peculiar syntax and usage of S4 object system make it unpleasant to use and incompatible with other packages. 
+There are various R packages for creating recommender systems. `arules` provides a set of association rules mining functions. As for RS, there is a package called `recommenderlab`. It serves as a wrapper over methods defined in `arules` and other packages. The main strength lies in its versatility and unified interface for various methods - it is possible to run complex validation of different approaches and algorithms in the same way. However, its peculiar syntax and usage of S4 object system make it unpleasant to use and incompatible with other packages. 
 
 
 First step is to filter out non-active users. I have also made a training-test split based on timestamp obtained for each user. 
@@ -133,6 +136,15 @@ ratings_ordered %>%
 
 Training set contains `r nrow(training_set)` observations, while test set - `r nrow(test_set)`.
 
+```{r}
+training_set %>%
+  head(5) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling()
+```
+
+
+
 Below I have created two recommender models using `recommenderlab`. The function requires to convert the dataset to a `binaryRatingMatrix` format previously.
 
 ```{r train-models, cache=T}
@@ -154,13 +166,13 @@ apriori_model <-
                               parameter = list(supp = 0.1, conf = 0.5))
 ```
 
-After obtaining models, the packages provides an interface using function `predict`. Below I have predicted 100 next films to watch by each user. One thing wort mentioning is that apriori algorithm is not always capable of producing that amount of ratings  
+After obtaining models, the packages provides an interface using function `predict`. Below I have predicted 20 next films to watch by each user. One thing worth mentioning is that apriori algorithm is not always capable of producing that amount of ratings.
 
 ```{r predict, cache=T}
-ubcf_predictions_raw <- predict(ubcf_model, training_affinity_matrix, n = 100, type = "topN")
+ubcf_predictions_raw <- predict(ubcf_model, training_affinity_matrix, n = 20, type = "topN")
 ubcf_predictions_raw <- as(ubcf_predictions_raw, "list")
 
-apriori_predictions_raw <- predict(apriori_model, training_affinity_matrix, n = 100, type = "topN")
+apriori_predictions_raw <- predict(apriori_model, training_affinity_matrix, n = 20, type = "topN")
 apriori_predictions_raw <- as(apriori_predictions_raw, "list")
 
 ```
@@ -172,17 +184,17 @@ ubcf_predictions_raw[[1]][1:10]
 ```
 
 
-To compare recommended movies and actually seen ones, some amout of data wrangling is needed. Below I have computed actual statistics concerning both sets.
+To compare recommended movies and actually seen ones, some amount of data wrangling is needed. Below I have computed actual statistics concerning both sets.
 
 ```{r, cache=T}
 # Function to compute accuracy measures needed
-accuracy_measures <- function(predicted, actual){
+accuracy_measures <- function(predicted, actual) {
   tibble(
     in_both = sum(predicted %in% actual),
     only_in_predicted = length(predicted) - in_both,
     only_in_actual = length(actual) - in_both,
-    predicted_cnt = length(predicted), 
-    actual_cnt = length(actual) 
+    predicted_cnt = length(predicted),
+    actual_cnt = length(actual)
   )
 }
 
@@ -193,47 +205,142 @@ test_set %>%
   nest() %>%
   .$data %>%
   as.list() %>%
-  map(function(x) as.character(x$movie_id))-> set
+  map(function(x)
+    as.character(x$movie_id)) -> set
 
 # Apriori
-map2(apriori_predictions_raw, 
-     set, 
-     function(x,y) list(predicted = x, actual = y)) -> comparison
+map2(apriori_predictions_raw,
+     set,
+     function(x, y)
+       list(predicted = x, actual = y)) -> comparison
 
 comparison %>%
-  map_df(function(x) accuracy_measures(x$predicted, 
-                                       x$actual)) %>%
+  map_df(function(x)
+    accuracy_measures(x$predicted,
+                      x$actual)) %>%
   mutate(user_id = row_number()) -> apriori_measures_raw
 
 # UBCF
-map2(ubcf_predictions_raw, 
-     set, 
-     function(x,y) list(predicted = x, actual = y)) -> comparison
+map2(ubcf_predictions_raw,
+     set,
+     function(x, y)
+       list(predicted = x, actual = y)) -> comparison
 
 
 comparison %>%
-  map_df(function(x) accuracy_measures(x$predicted, 
-                                       x$actual)) %>%
+  map_df(function(x)
+    accuracy_measures(x$predicted,
+                      x$actual)) %>%
   mutate(user_id = row_number()) -> ubcf_measures_raw
+
+
+# Calculate measures for apriori
+apriori_measures_raw %>%
+  rename(true_positive = in_both,
+         false_positive = only_in_predicted) %>%
+  mutate(precision = true_positive / predicted_cnt) %>%
+  select(user_id, precision, everything()) -> apriori_measures
+
+# apriori_measures[is.na(apriori_measures)] <- 0
+
+# Calculate measures for UBCF
+ubcf_measures_raw %>%
+  rename(true_positive = in_both,
+         false_positive = only_in_predicted) %>%
+  mutate(precision = true_positive / predicted_cnt) %>%
+  select(user_id, precision, everything()) -> ubcf_measures
+
 
 ```
 
 
 This is how measures table looks like:
+
+#### {.tabset .tabset-fade}
+
+##### apriori
+
 ```{r, cache = T}
-apriori_measures_raw %>%
-  select(user_id, everything()) %>%
+apriori_measures %>%
   head(5) %>%
   knitr::kable() %>%
   kableExtra::kable_styling()
 ```
 
 
+`NA` values in precision occur when for particular user there are no recommendations made.
+
+##### UBCF
+
+```{r, cache = T}
+ubcf_measures %>%
+  head(5) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling()
+```
+
+####
+
+
+
+To compare recommender systems based on binary data  (as opposed to predicting rating for specific item), one can use the same measures as in classfication setting. That is, true positive occurs when system recommended the same movie as there exists in test set (for specific user). However, for most of the algorithms a concept of negatives does not make sense - recommendation systems show what are the items that the user would be interested in, not the ones that should not be recommended. As such, a reasonable measure for comparing the models is precision. This is a proportion of true positives to the number number of recommendations produced. 
+
+As I have created recommendations for each user separately, it is possible to calculate both general precision and an estimate for each user. The first measure is `r ubcf_measures %>%summarise_all(sum) %>%mutate(precision = true_positive/predicted_cnt) %>%.$precision %>% sprintf("%.3f", .)` 
+and `r apriori_measures %>% summarise_all(sum) %>% mutate(precision = true_positive/predicted_cnt) %>% .$precision %>% sprintf("%.3f", .)` for User-Based Collaborative Filtering and Apriori, respectively. 
+
+
+One way to compare user-wise score is by looking at the distributions. Below I have included both density plot and summary table for both systems. As can be seen, the distribution for UBCF is slightly more oriented to the right, that is, more correct recommendations are made.
+
+
+#### {.tabset .tabset-fade}
+
+##### Density plot
+```{r}
+bind_rows(apriori_measures,
+          ubcf_measures,
+          .id = c("Method")) %>%
+  mutate(Method = ifelse(Method == 1, "apriori", "UBCF")) %>%
+  ggplot(aes(x = precision, fill = Method)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")[c(2, 5)]) +
+  # facet_grid(rows = vars(method)) +
+  theme_minimal()
+
+```
+
+
+##### Summary table
+
+```{r}
+bind_rows(apriori_measures,
+          ubcf_measures,
+          .id = c("Method")) %>%
+  mutate(Method = ifelse(Method == 1, "apriori", "UBCF")) %>%
+  filter(!is.na(precision)) %>%
+  select(Method, precision) %>%
+  group_by(Method) %>%
+  summarise(
+    `Min` = min(precision),
+    `25%` = quantile(precision, 0.25),
+    `Median` = quantile(precision, 0.5),
+    `Mean` = mean(precision),
+    `75%` = quantile(precision, 0.75),
+    `Max` = max(precision)
+  ) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable() %>%
+  kableExtra::kable_styling()
+
+```
+
+
+Obtained precision value is pretty low. This has two reasons. The dataset used in this study is very small - original dataset has about 20 million recommendations, and in real case this number is still way bigger - for example, Netflix movie streaming service has ~160 million users as for end of 2019.  [https://www.statista.com/statistics/250934/quarterly-number-of-netflix-streaming-subscribers-worldwide/] 
+
 
 
 ### Summary
 
-
+In this paper I have presented two possible approaches to Recommendation task- namely apriori and User-Based Collaborative Filtering algoritms. UBCF showed to be superior over association rules analysis. This is consistent with current trend in recommendation systems development - collaborative filtering is currently more popular one. 
 
 
 
